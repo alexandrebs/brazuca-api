@@ -17,7 +17,7 @@ public class ScrapingUtil {
 	public static void main(String[] args) {
 
 		String url = BASE_URL_GOOGLE + "criciuma x ponte preta 15/07/2022" + COMPLEMENTO_URL_GOOGLE;
-		// criciuma x ponte preta vila nova x csa 
+		// criciuma x ponte preta vila nova x csa
 		ScrapingUtil scraping = new ScrapingUtil();
 
 		scraping.obtemInformacoesPartida(url);
@@ -37,6 +37,10 @@ public class ScrapingUtil {
 			LOGGER.info("Título da Página -> {}", title);
 
 			StatusPartida statusPartida = obtemStatusPartida(document);
+			LOGGER.info("Status Partida {} ", statusPartida);
+
+			String tempoPartida = obtemTempoPartida(document);
+			LOGGER.info("Tempo Partida {} ", tempoPartida);
 
 		} catch (IOException e) {
 
@@ -60,22 +64,55 @@ public class ScrapingUtil {
 		if (!isTempoPartida) {
 			String tempoPartida = document.select("div[class=imso_mh__lv-m-stts-cont]").first().text();
 			statusPartida = StatusPartida.PARTIDA_EM_ENDAMENTO;
-			LOGGER.info("TEMPO -> {}", tempoPartida);
-			
-			if(tempoPartida.contains("Pênaltis")) {
+
+			if (tempoPartida.contains("Pênaltis")) {
 				statusPartida = StatusPartida.PARTIDA_PENALTIS;
 			}
 
 		}
-		
+
 		isTempoPartida = document.select("span[class=imso_mh__ft-mtch imso-medium-font imso_mh__ft-mtchc]").isEmpty();
 		if (!isTempoPartida) {
 			statusPartida = StatusPartida.PARTIDA_ENCERRADA;
-			
-			LOGGER.info("Status Partida -> {}", statusPartida);
+
 		}
-		
+
 		return statusPartida;
 	}
 
+	public String obtemTempoPartida(Document document) {
+
+		String tempoPartida = null;
+		// jogo rolando, penalidades ou intervalo
+		boolean isTempoPartida = document.select("div[class=imso_mh__lv-m-stts-cont]").isEmpty();
+
+		if (!isTempoPartida) {
+			tempoPartida = document.select("div[class=imso_mh__lv-m-stts-cont]").first().text();
+		}
+
+		isTempoPartida = document.select("span[class=imso_mh__ft-mtch imso-medium-font imso_mh__ft-mtchc]").isEmpty();
+
+		if (!isTempoPartida) {
+			tempoPartida = document.select("span[class=imso_mh__ft-mtch imso-medium-font imso_mh__ft-mtchc]").first()
+					.text();
+		}
+
+		return corrigeTempoPartida(tempoPartida);
+	}
+
+	
+	public String corrigeTempoPartida(String tempo) {
+		String tempoPartida = null;
+		
+		if(tempo.contains("'")) {
+			tempoPartida = tempo.replace("'", " min");
+		}else if((tempo.contains("+"))){
+			tempoPartida = tempo.replace(" ", "").concat(" min");
+		}else {
+			return tempo;
+		}
+		
+		return tempoPartida;
+	}
+	
 }
