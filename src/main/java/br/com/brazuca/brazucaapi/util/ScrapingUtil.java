@@ -17,7 +17,7 @@ public class ScrapingUtil {
 	public static void main(String[] args) {
 
 		String url = BASE_URL_GOOGLE + "criciuma x ponte preta 15/07/2022" + COMPLEMENTO_URL_GOOGLE;
-
+		// criciuma x ponte preta vila nova x csa 
 		ScrapingUtil scraping = new ScrapingUtil();
 
 		scraping.obtemInformacoesPartida(url);
@@ -32,10 +32,11 @@ public class ScrapingUtil {
 
 		try {
 			document = Jsoup.connect(url).get();
-			
+
 			String title = document.title();
-			LOGGER.info("Título da Página -> {}",title);
-			
+			LOGGER.info("Título da Página -> {}", title);
+
+			StatusPartida statusPartida = obtemStatusPartida(document);
 
 		} catch (IOException e) {
 
@@ -43,6 +44,38 @@ public class ScrapingUtil {
 		}
 
 		return partidaGoogleDTO;
+	}
+
+	public StatusPartida obtemStatusPartida(Document document) {
+
+		// situações
+		// 1 - partida não iniciada
+		// 2 - partida iniciada/jogo rolando/ intervalo
+		// 3 - partida encerrada
+		// 4 - penalidades
+		StatusPartida statusPartida = StatusPartida.PARTIDA_NAO_INICIADA;
+
+		boolean isTempoPartida = document.select("div[class=imso_mh__lv-m-stts-cont]").isEmpty();
+
+		if (!isTempoPartida) {
+			String tempoPartida = document.select("div[class=imso_mh__lv-m-stts-cont]").first().text();
+			statusPartida = StatusPartida.PARTIDA_EM_ENDAMENTO;
+			LOGGER.info("TEMPO -> {}", tempoPartida);
+			
+			if(tempoPartida.contains("Pênaltis")) {
+				statusPartida = StatusPartida.PARTIDA_PENALTIS;
+			}
+
+		}
+		
+		isTempoPartida = document.select("span[class=imso_mh__ft-mtch imso-medium-font imso_mh__ft-mtchc]").isEmpty();
+		if (!isTempoPartida) {
+			statusPartida = StatusPartida.PARTIDA_ENCERRADA;
+			
+			LOGGER.info("Status Partida -> {}", statusPartida);
+		}
+		
+		return statusPartida;
 	}
 
 }
