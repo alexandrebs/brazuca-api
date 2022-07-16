@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 import br.com.brazuca.brazucaapi.dto.PartidaGoogleDTO;
@@ -17,7 +18,7 @@ public class ScrapingUtil {
 	public static void main(String[] args) {
 
 		String url = BASE_URL_GOOGLE + "criciuma x ponte preta 15/07/2022" + COMPLEMENTO_URL_GOOGLE;
-		// criciuma x ponte preta vila nova x csa
+		// criciuma x ponte preta vila nova x csa flamengo x coritiba
 		ScrapingUtil scraping = new ScrapingUtil();
 
 		scraping.obtemInformacoesPartida(url);
@@ -39,9 +40,18 @@ public class ScrapingUtil {
 			StatusPartida statusPartida = obtemStatusPartida(document);
 			LOGGER.info("Status Partida {} ", statusPartida);
 
-			String tempoPartida = obtemTempoPartida(document);
-			LOGGER.info("Tempo Partida {} ", tempoPartida);
+			if (statusPartida != StatusPartida.PARTIDA_NAO_INICIADA) {
+				String tempoPartida = obtemTempoPartida(document);
+				LOGGER.info("Tempo Partida {} ", tempoPartida);
+			}
 
+			String nomeEquipeCasa = obtemNomeEquipeCasa(document);
+			LOGGER.info("Nome Equipe Casa: {} ", nomeEquipeCasa);
+
+			String nomeEquipeVisitante = obtemNomeEquipeVisitante(document);
+			LOGGER.info("Nome Equipe Visitante: {} ", nomeEquipeVisitante);
+			
+			
 		} catch (IOException e) {
 
 			LOGGER.error("ERRO AO TENTAR CONECTAR NO GOOGLE COM JSOUP -> {}", e.getMessage());
@@ -100,19 +110,39 @@ public class ScrapingUtil {
 		return corrigeTempoPartida(tempoPartida);
 	}
 
-	
 	public String corrigeTempoPartida(String tempo) {
 		String tempoPartida = null;
-		
-		if(tempo.contains("'")) {
+
+		if (tempo.contains("'")) {
 			tempoPartida = tempo.replace("'", " min");
-		}else if((tempo.contains("+"))){
+		} else if ((tempo.contains("+"))) {
 			tempoPartida = tempo.replace(" ", "").concat(" min");
-		}else {
+		} else {
 			return tempo;
 		}
-		
+
 		return tempoPartida;
 	}
-	
+
+
+
+	public String obtemNomeEquipeCasa(Document document) {
+
+		Element elemento = document.selectFirst("div[class=imso_mh__first-tn-ed imso_mh__tnal-cont imso-tnol]");
+
+		String nomeEquipeCasa = elemento.select("span").text();
+
+		return nomeEquipeCasa;
+	}
+
+	private String obtemNomeEquipeVisitante(Document document) {
+
+		org.jsoup.nodes.Element elemento = document
+				.selectFirst("div[class=imso_mh__second-tn-ed imso_mh__tnal-cont imso-tnol]");
+
+		String nomeEquipeVisitante = elemento.select("span").text();
+
+		return nomeEquipeVisitante;
+	}
+
 }
