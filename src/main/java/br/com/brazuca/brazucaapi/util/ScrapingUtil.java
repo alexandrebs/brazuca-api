@@ -21,6 +21,9 @@ public class ScrapingUtil {
 	private static final Logger LOGGER = LoggerFactory.getLogger(ScrapingUtil.class);
 	private static final String BASE_URL_GOOGLE = "https://www.google.com/search?q=";
 	private static final String COMPLEMENTO_URL_GOOGLE = "&hl=pt-BR";
+	
+	private static final String CASA = "casa";
+	private static final String VISITANTE = "visitante";
 
 	public static void main(String[] args) {
 
@@ -62,6 +65,12 @@ public class ScrapingUtil {
 				
 				String golsEquipeVisitante = recuperaGolsEquipeVisitante(document);
 				LOGGER.info("Gols Jogadores Equipe Visitante: {}", golsEquipeVisitante);
+				
+				int resultadoPenaltiCasa = obtemResutatoPenalti(document, CASA);
+				LOGGER.info("Placar estendido Casa: {}", resultadoPenaltiCasa);
+
+				int resultadoPenaltiVisitante = obtemResutatoPenalti(document, VISITANTE);
+				LOGGER.info("Placar estendido Visitante: {}", resultadoPenaltiVisitante);
 			}
 
 			String nomeEquipeCasa = obtemNomeEquipeCasa(document);
@@ -190,7 +199,7 @@ public class ScrapingUtil {
 		String placarEquipe = document.selectFirst("div[class=imso_mh__l-tm-sc imso_mh__scr-it imso-light-font]")
 				.text();
 
-		return Integer.valueOf(placarEquipe);
+		return formatarPlacarStringInteger(placarEquipe);
 	}
 
 	public Integer recuperaPlacarEquipeVisitante(Document document) {
@@ -198,7 +207,7 @@ public class ScrapingUtil {
 		String placarEquipe = document.selectFirst("div[class=imso_mh__r-tm-sc imso_mh__scr-it imso-light-font]")
 				.text();
 
-		return Integer.valueOf(placarEquipe);
+		return formatarPlacarStringInteger(placarEquipe);
 	}
 	
 	
@@ -229,5 +238,37 @@ public class ScrapingUtil {
 		return String.join(", ", golsEquipe);
 	}
 	
+	
+	
+	public Integer obtemResutatoPenalti(Document document, String tipoEquipe) {
+
+		Boolean isPenalti = document.select("div[class=imso_mh_s__psn-sc]").isEmpty();
+		String[] penalidadeCompleta = null;
+		if (!isPenalti) {
+
+			String resultado = document.select("div[class=imso_mh_s__psn-sc]").text();
+
+			String divisao = resultado.substring(0, 5).replace(" ", "");
+
+			penalidadeCompleta = divisao.split("-");
+			return (tipoEquipe.equals(CASA)) ? formatarPlacarStringInteger(penalidadeCompleta[0])
+					: formatarPlacarStringInteger(penalidadeCompleta[1]);
+		}
+
+		return 0;
+	}
+
+	public Integer formatarPlacarStringInteger(String resultadoGols) {
+		Integer valor;
+		try {
+			valor = Integer.parseInt(resultadoGols);
+
+		} catch (Exception e) {
+
+			valor = 0;
+		}
+
+		return valor;
+	}
 	
 }
