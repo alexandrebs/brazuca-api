@@ -2,6 +2,7 @@ package br.com.brazuca.brazucaapi.dto;
 
 import java.io.Serializable;
 
+import br.com.brazuca.brazucaapi.util.StatusPartida;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -14,6 +15,7 @@ import lombok.Setter;
 public class PartidaGoogleDTO implements Serializable {
 	private static final long serialVersionUID = 1L;
 	
+	private String statusPartida;
 	private String tempoPartida;
 	// Informações da equipe da Casa
 	private String nomeEquipeCasa;
@@ -27,4 +29,6 @@ public class PartidaGoogleDTO implements Serializable {
 	private Integer placarEquipeVisitante;
 	private String golsEquipeVisitante;
 	private String placarEstendidoEquipeVisitante;
+	
+	
 }
