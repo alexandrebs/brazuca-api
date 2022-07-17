@@ -1,6 +1,8 @@
 package br.com.brazuca.brazucaapi.util;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.net.http.HttpRequest;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -8,6 +10,7 @@ import org.jsoup.nodes.Element;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 import br.com.brazuca.brazucaapi.dto.PartidaGoogleDTO;
+import java.util.Base64;
 
 public class ScrapingUtil {
 
@@ -17,7 +20,7 @@ public class ScrapingUtil {
 
 	public static void main(String[] args) {
 
-		String url = BASE_URL_GOOGLE + "criciuma x ponte preta 15/07/2022" + COMPLEMENTO_URL_GOOGLE;
+		String url = BASE_URL_GOOGLE + "flamengo x coritiba" + COMPLEMENTO_URL_GOOGLE;
 		// criciuma x ponte preta vila nova x csa flamengo x coritiba
 		ScrapingUtil scraping = new ScrapingUtil();
 
@@ -43,6 +46,12 @@ public class ScrapingUtil {
 			if (statusPartida != StatusPartida.PARTIDA_NAO_INICIADA) {
 				String tempoPartida = obtemTempoPartida(document);
 				LOGGER.info("Tempo Partida {} ", tempoPartida);
+
+				Integer placarEquipeCasa = recuperaPlacarEquipeCasa(document);
+				LOGGER.info("Placar Equipe Casa: {}", placarEquipeCasa);
+				
+				Integer placarEquipeVisitante = recuperaPlacarEquipeVisitante(document);
+				LOGGER.info("Placar Equipe Casa: {}", placarEquipeVisitante);
 			}
 
 			String nomeEquipeCasa = obtemNomeEquipeCasa(document);
@@ -50,8 +59,10 @@ public class ScrapingUtil {
 
 			String nomeEquipeVisitante = obtemNomeEquipeVisitante(document);
 			LOGGER.info("Nome Equipe Visitante: {} ", nomeEquipeVisitante);
-			
-			
+
+			String urlLogoEquipeCasa = obtemImagemEquipeCasa(document);
+			LOGGER.info("URL Logo equipe Casa: {}", urlLogoEquipeCasa);
+
 		} catch (IOException e) {
 
 			LOGGER.error("ERRO AO TENTAR CONECTAR NO GOOGLE COM JSOUP -> {}", e.getMessage());
@@ -124,8 +135,6 @@ public class ScrapingUtil {
 		return tempoPartida;
 	}
 
-
-
 	public String obtemNomeEquipeCasa(Document document) {
 
 		Element elemento = document.selectFirst("div[class=imso_mh__first-tn-ed imso_mh__tnal-cont imso-tnol]");
@@ -137,12 +146,49 @@ public class ScrapingUtil {
 
 	private String obtemNomeEquipeVisitante(Document document) {
 
-		org.jsoup.nodes.Element elemento = document
-				.selectFirst("div[class=imso_mh__second-tn-ed imso_mh__tnal-cont imso-tnol]");
+		Element elemento = document.selectFirst("div[class=imso_mh__second-tn-ed imso_mh__tnal-cont imso-tnol]");
 
 		String nomeEquipeVisitante = elemento.select("span").text();
 
 		return nomeEquipeVisitante;
+	}
+
+	private String obtemImagemEquipeCasa(Document document) {
+
+		Element element = document.selectFirst("div[class=imso_mh__first-tn-ed imso_mh__tnal-cont imso-tnol]");
+
+		element = element.selectFirst("div[class=imso_mh__t-l-cont kno-fb-ctx]");
+
+		String logoEquipeCasa = "https:" + element.select("img[class=imso_btl__mh-logo]").attr("src");
+
+		return logoEquipeCasa;
+	}
+
+	private String obtemImagemEquipeVisitante(Document document) {
+
+		Element element = document.selectFirst("div[class=imso_mh__second-tn-ed imso_mh__tnal-cont imso-tnol]");
+
+		element = element.selectFirst("div[class=imso_mh__t-l-cont kno-fb-ctx]");
+
+		String logoEquipeVisitante = element.select("img[class=imso_btl__mh-logo]").attr("src");
+
+		return logoEquipeVisitante;
+	}
+
+	public Integer recuperaPlacarEquipeCasa(Document document) {
+
+		String placarEquipe = document.selectFirst("div[class=imso_mh__l-tm-sc imso_mh__scr-it imso-light-font]")
+				.text();
+
+		return Integer.valueOf(placarEquipe);
+	}
+
+	public Integer recuperaPlacarEquipeVisitante(Document document) {
+
+		String placarEquipe = document.selectFirst("div[class=imso_mh__r-tm-sc imso_mh__scr-it imso-light-font]")
+				.text();
+
+		return Integer.valueOf(placarEquipe);
 	}
 
 }
