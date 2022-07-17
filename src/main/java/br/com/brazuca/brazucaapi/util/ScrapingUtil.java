@@ -7,10 +7,14 @@ import java.net.http.HttpRequest;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 import br.com.brazuca.brazucaapi.dto.PartidaGoogleDTO;
+
+import java.util.ArrayList;
 import java.util.Base64;
+import java.util.List;
 
 public class ScrapingUtil {
 
@@ -52,6 +56,12 @@ public class ScrapingUtil {
 				
 				Integer placarEquipeVisitante = recuperaPlacarEquipeVisitante(document);
 				LOGGER.info("Placar Equipe Casa: {}", placarEquipeVisitante);
+				
+				String golsEquipeCasa = recuperaGolsEquipeCasa(document);
+				LOGGER.info("Gols Jogadores Equipe Casa: {}", golsEquipeCasa);
+				
+				String golsEquipeVisitante = recuperaGolsEquipeVisitante(document);
+				LOGGER.info("Gols Jogadores Equipe Visitante: {}", golsEquipeVisitante);
 			}
 
 			String nomeEquipeCasa = obtemNomeEquipeCasa(document);
@@ -190,5 +200,34 @@ public class ScrapingUtil {
 
 		return Integer.valueOf(placarEquipe);
 	}
+	
+	
+	public String recuperaGolsEquipeCasa(Document document) {
+		List<String> golsEquipe = new ArrayList<>();
+		
+		Elements elementos = document.select("div[class=imso_gs__tgs imso_gs__left-team]").select("div[class=imso_gs__gs-r]");
+		
+		for(Element e : elementos) {
+			String infoGol = e.select("div[class=imso_gs__gs-r]").text();
+			golsEquipe.add(infoGol);
+		}
+		
+		return String.join(", ", golsEquipe);
+	}
 
+	
+	public String recuperaGolsEquipeVisitante(Document document) {
+		List<String> golsEquipe = new ArrayList<>();
+		
+		Elements elementos = document.select("div[class=imso_gs__tgs imso_gs__right-team]").select("div[class=imso_gs__gs-r]");
+		
+		for(Element e : elementos) {
+			String infoGol = e.select("div[class=imso_gs__gs-r]").text();
+			golsEquipe.add(infoGol);
+		}
+		
+		return String.join(", ", golsEquipe);
+	}
+	
+	
 }
